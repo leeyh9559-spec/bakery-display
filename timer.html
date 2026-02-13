@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深夜工坊 - 出炉看板</title>
+    <style>
+        :root {
+            --deep-green: #2F6F5E; /* Logo中的深绿色 */
+            --creamy-yellow: #FBEBD6; /* Logo中的奶黄色 */
+            --accent-orange: #F59E6F; /* Logo中的橙色边框 */
+            --accent-red: #D32F2F; /* 出炉提醒色 */
+        }
+
+        body {
+            background-color: var(--deep-green);
+            color: var(--creamy-yellow);
+            font-family: "Microsoft YaHei", "Heiti SC", sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh; /* 使用min-height确保内容多时能滚动 */
+        }
+
+        /* 顶部Logo区域 */
+        .header-logo {
+            margin-bottom: 20px;
+            /* 给Logo加一个发光效果，更像招牌 */
+            filter: drop-shadow(0 0 10px rgba(245, 158, 111, 0.5));
+        }
+
+        .header-logo img {
+            max-height: 150px; /* 控制Logo大小 */
+            width: auto;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            color: var(--accent-orange);
+        }
+
+        /* 计时器容器 */
+        #timer-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+            flex-grow: 1;
+            margin-bottom: 120px; /* 底部留空给控制按钮 */
+        }
+
+        /* 计时卡片 */
+        .timer-card {
+            background: var(--creamy-yellow);
+            color: var(--deep-green);
+            padding: 20px;
+            width: 320px;
+            height: 180px;
+            border-radius: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* 复古边框效果 */
+            border: 3px solid var(--accent-orange);
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
+            animation: fadeIn 0.5s ease;
+            position: relative;
+        }
+
+        /* 关闭按钮 */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--deep-green);
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.5;
+            padding: 5px;
+        }
+        .close-btn:hover { opacity: 1; }
+
+        .product-name {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .time-left {
+            font-size: 3.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 900;
+            color: var(--deep-green);
+        }
+
+        /* 出炉状态 */
+        .finished {
+            background: var(--accent-red) !important;
+            color: white !important;
+            border-color: white !important;
+            animation: blink 0.8s infinite;
+        }
+        .finished .time-left, .finished .close-btn {
+            color: white !important;
+        }
+
+        /* 控制按钮区域 */
+        .controls-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(47, 111, 94, 0.9); /* 半透明深绿背景 */
+            padding: 20px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn {
+            padding: 12px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            background: var(--accent-orange);
+            color: var(--deep-green);
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
+            background: var(--creamy-yellow);
+        }
+
+        .reset-btn {
+            background: #555;
+            color: white;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="header-logo">
+        <img src="image_3.png" alt="深夜工坊 Logo">
+    </div>
+    <div class="subtitle">新鲜出炉倒计时 · FRESHLY BAKED</div>
+
+    <div id="timer-container">
+        </div>
+
+    <div class="controls-container">
+        <button class="control-btn" onclick="addTimer('原味蛋挞', 18)">原味蛋挞 (18m)</button>
+        <button class="control-btn" onclick="addTimer('斑斓蛋挞', 18)">斑斓蛋挞 (18m)</button>
+        <button class="control-btn" onclick="addTimer('叉烧鸡乱乱包', 20)">叉烧鸡包 (20m)</button>
+        <button class="control-btn" onclick="addTimer('竹炭焦糖蛋挞', 20)">竹炭焦糖 (20m)</button>
+        <button class="control-btn" onclick="addTimer('法式焦糖蛋挞', 20)">法式焦糖 (20m)</button>
+        <button class="control-btn" onclick="addTimer('蝴蝶酥', 6)">蝴蝶酥 (6m)</button>
+        <button class="control-btn" onclick="addTimer('香肠港式酥饼', 20)">香肠酥饼 (20m)</button>
+        <button class="control-btn" onclick="addTimer('咖喱鸡肉酥', 20)">咖喱鸡酥
