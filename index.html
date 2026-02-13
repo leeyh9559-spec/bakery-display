@@ -3,178 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>深夜工坊 - 出炉看板</title>
+    <title>深夜工坊 - 远程看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --deep-green: #2F6F5E; /* Logo中的深绿色 */
-            --creamy-yellow: #FBEBD6; /* Logo中的奶黄色 */
-            --accent-orange: #F59E6F; /* Logo中的橙色边框 */
-            --accent-red: #D32F2F; /* 出炉提醒色 */
-        }
+        :root { --deep-green: #2F6F5E; --creamy-yellow: #FBEBD6; --accent-orange: #F59E6F; --accent-red: #D32F2F; }
+        body { background-color: var(--deep-green); color: var(--creamy-yellow); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        /* 布局控制 */
+        #display-mode { display: none; width: 100%; text-align: center; padding: 20px; }
+        #control-mode { display: none; width: 100%; padding: 20px; box-sizing: border-box; }
 
-        body {
-            background-color: var(--deep-green);
-            color: var(--creamy-yellow);
-            font-family: "Microsoft YaHei", "Heiti SC", sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh; /* 使用min-height确保内容多时能滚动 */
-        }
+        /* 显示端样式 */
+        .logo { max-height: 180px; margin-bottom: 20px; }
+        #timer-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; }
+        .timer-card { background: var(--creamy-yellow); color: var(--deep-green); padding: 25px; width: 350px; border-radius: 15px; border: 4px solid var(--accent-orange); box-shadow: 10px 10px 0px rgba(0,0,0,0.3); animation: bounceIn 0.5s; position: relative; }
+        .product-name { font-size: 1.8rem; font-weight: bold; }
+        .time-left { font-size: 4rem; font-family: monospace; font-weight: 900; }
+        .finished { background: var(--accent-red) !important; color: white !important; animation: blink 0.8s infinite; }
 
-        /* 顶部Logo区域 */
-        .header-logo {
-            margin-bottom: 20px;
-            /* 给Logo加一个发光效果，更像招牌 */
-            filter: drop-shadow(0 0 10px rgba(245, 158, 111, 0.5));
-        }
+        /* 控制端按钮 */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 600px; margin: 0 auto; }
+        .btn { padding: 20px; font-size: 1.1rem; border: none; border-radius: 10px; background: var(--accent-orange); color: var(--deep-green); font-weight: bold; cursor: pointer; }
+        .btn:active { transform: scale(0.95); }
+        .mode-hint { margin-top: 20px; font-size: 0.8rem; opacity: 0.6; }
 
-        .header-logo img {
-            max-height: 150px; /* 控制Logo大小 */
-            width: auto;
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-            opacity: 0.9;
-            margin-bottom: 30px;
-            color: var(--accent-orange);
-        }
-
-        /* 计时器容器 */
-        #timer-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 25px;
-            width: 100%;
-            flex-grow: 1;
-            margin-bottom: 120px; /* 底部留空给控制按钮 */
-        }
-
-        /* 计时卡片 */
-        .timer-card {
-            background: var(--creamy-yellow);
-            color: var(--deep-green);
-            padding: 20px;
-            width: 320px;
-            height: 180px;
-            border-radius: 15px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            /* 复古边框效果 */
-            border: 3px solid var(--accent-orange);
-            box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
-            animation: fadeIn 0.5s ease;
-            position: relative;
-        }
-
-        /* 关闭按钮 */
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: var(--deep-green);
-            font-size: 1.2rem;
-            cursor: pointer;
-            opacity: 0.5;
-            padding: 5px;
-        }
-        .close-btn:hover { opacity: 1; }
-
-        .product-name {
-            font-size: 1.6rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .time-left {
-            font-size: 3.5rem;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: 900;
-            color: var(--deep-green);
-        }
-
-        /* 出炉状态 */
-        .finished {
-            background: var(--accent-red) !important;
-            color: white !important;
-            border-color: white !important;
-            animation: blink 0.8s infinite;
-        }
-        .finished .time-left, .finished .close-btn {
-            color: white !important;
-        }
-
-        /* 控制按钮区域 */
-        .controls-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(47, 111, 94, 0.9); /* 半透明深绿背景 */
-            padding: 20px;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .control-btn {
-            padding: 12px 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            background: var(--accent-orange);
-            color: var(--deep-green);
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: all 0.2s;
-            box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
-        }
-
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
-            background: var(--creamy-yellow);
-        }
-
-        .reset-btn {
-            background: #555;
-            color: white;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes bounceIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
     </style>
 </head>
 <body>
 
-    <div class="header-logo">
-        <img src="logo-img.jpeg" alt="深夜工坊 Logo">
+    <div id="display-mode">
+        <img src="image_3.png" class="logo" alt="Logo">
+        <div id="timer-container"></div>
     </div>
-    <div class="subtitle">新鲜出炉倒计时 · FRESHLY BAKED</div>
 
-    <div id="timer-container">
-        </div>
+    <div id="control-mode">
+        <h2 style="text-align:center">深夜工坊 · 遥控面板</h2>
+        <div class="btn-grid" id="button-list"></div>
+        <button onclick="sendClear()" style="width:100%; margin-top:30px; padding:15px; background:#555; color:white; border:none; border-radius:10px;">清空电视屏幕</button>
+    </div>
 
-    <div class="controls-container">
-        <button class="control-btn" onclick="addTimer('原味蛋挞', 18)">原味蛋挞 (18m)</button>
-        <button class="control-btn" onclick="addTimer('斑斓蛋挞', 18)">斑斓蛋挞 (18m)</button>
-        <button class="control-btn" onclick="addTimer('叉烧鸡乱乱包', 20)">叉烧鸡包 (20m)</button>
-        <button class="control-btn" onclick="addTimer('竹炭焦糖蛋挞', 20)">竹炭焦糖 (20m)</button>
-        <button class="control-btn" onclick="addTimer('法式焦糖蛋挞', 20)">法式焦糖 (20m)</button>
-        <button class="control-btn" onclick="addTimer('蝴蝶酥', 6)">蝴蝶酥 (6m)</button>
-        <button class="control-btn" onclick="addTimer('香肠港式酥饼', 20)">香肠酥饼 (20m)</button>
+    <script>
+        // ======= 【配置区：请填入你在 Supabase 获取的值】 =======
+        const SB_URL = "你的_PROJECT_URL";
+        const SB_KEY = "你的_ANON_KEY";
+        // =====================================================
 
-        <button class="control-btn" onclick="addTimer('咖喱鸡肉酥', 20)">咖喱鸡酥
+        const supabase = nominations.createClient(SB_URL, SB_KEY);
+        const urlParams = new URLSearchParams(window.location.search);
+        const isControl = urlParams.has('mode') && urlParams.get('mode') === 'control';
 
+        // 产品列表
+        const products = [
+            {n: '原味蛋挞', t: 18}, {n: '斑斓蛋挞', t: 18}, {n: '叉烧鸡乱乱包', t: 20},
+            {n: '竹炭焦糖蛋挞', t: 20}, {n: '法式焦糖蛋挞', t: 20}, {n: '蝴蝶酥', t: 6},
+            {n: '香肠港式酥饼', t: 20}, {n: '咖喱鸡肉酥', t: 20}, {n: '黑胡椒鸡肉派', t: 20},
+            {n: '牛油老婆饼', t: 20}, {n: '牛油老公饼', t: 20}
+        ];
+
+        // 初始化界面
+        if (isControl) {
+            document.getElementById('control-mode').style.display = 'block';
+            const list = document.getElementById('button-list');
+            products.forEach(p => {
+                const b = document.createElement('button');
+                b.className = 'btn';
+                b.innerText = `${p.n}\n(${p.t}m)`;
+                b.onclick = () => sendTimer(p.n, p.t);
+                list.appendChild(b);
+            });
+        } else {
+            document.getElementById('display-mode').style.display = 'block';
+        }
+
+        // --- 实时通讯逻辑 ---
+        const channel = supabase.channel('bakery_room');
+
+        // 发送指令
+        function sendTimer(name, mins) {
+            channel.send({ type: 'broadcast', event: 'new_timer', payload: { name, mins, id: Date.now() } });
+            alert('已发送给电视！');
+        }
+        function sendClear() {
+            channel.send({ type: 'broadcast', event: 'clear_all', payload: {} });
+        }
+
+        // 接收指令 (显示端)
+        channel.on('broadcast', { event: 'new_timer' }, ({ payload }) => {
+            if (!isControl) startTimer(payload.name, payload.mins, payload.id);
+        }).on('broadcast', { event: 'clear_all' }, () => {
+            if (!isControl) document.getElementById('timer-container').innerHTML = '';
+        }).subscribe();
+
+        // 倒计时逻辑
+        function startTimer(name, mins, id) {
+            const container = document.getElementById('timer-container');
+            let sec = mins * 60;
+            const card = document.createElement('div');
+            card.className = 'timer-card';
+            card.innerHTML = `<div class="product-name">${name}</div><div class="time-left">--:--</div>`;
+            container.appendChild(card);
+
+            const itv = setInterval(() => {
+                sec--;
+                const disp = card.querySelector('.time-left');
+                if (sec <= 0) {
+                    clearInterval(itv);
+                    disp.innerText = "新鲜出炉！";
+                    card.classList.add('finished');
+                } else {
+                    const m = Math.floor(sec/60).toString().padStart(2,'0');
+                    const s = (sec%60).toString().padStart(2,'0');
+                    disp.innerText = `${m}:${s}`;
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
